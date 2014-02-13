@@ -18,9 +18,11 @@
 
 package com.rallydev.build.samples;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Properties;
 
 import com.google.gson.JsonObject;
 import com.rallydev.rest.RallyRestApi;
@@ -190,11 +192,17 @@ public class BuildExamples {
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
+		
+		Properties prop = new Properties();
+		InputStream input = new FileInputStream("config.properties");
+		prop.load(input);
 
 		String server = "https://rally1.rallydev.com";
-		String username = "";
-		String password = "";
 		String workspace = "Workspace 1";
+
+		String username = prop.getProperty("user");
+		String password = prop.getProperty("password");
+		
 		BuildExamples sample = new BuildExamples(server, username, password, workspace);
 		
 		// first query the project object (builddefinitions and builds are associated with a specific project)
