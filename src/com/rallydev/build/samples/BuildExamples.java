@@ -192,8 +192,8 @@ public class BuildExamples {
 	public static void main(String[] args) throws Exception {
 
 		String server = "https://rally1.rallydev.com";
-		String username = "guest@ca.com";
-		String password = "gorally123";
+		String username = "";
+		String password = "";
 		String workspace = "Workspace 1";
 		BuildExamples sample = new BuildExamples(server, username, password, workspace);
 		
