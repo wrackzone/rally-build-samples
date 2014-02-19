@@ -28,8 +28,10 @@ import com.google.gson.JsonObject;
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
 import com.rallydev.rest.request.QueryRequest;
+import com.rallydev.rest.request.UpdateRequest;
 import com.rallydev.rest.response.CreateResponse;
 import com.rallydev.rest.response.QueryResponse;
+import com.rallydev.rest.response.UpdateResponse;
 import com.rallydev.rest.util.Fetch;
 import com.rallydev.rest.util.QueryFilter;
 
@@ -95,7 +97,8 @@ public class BuildExamples {
         QueryResponse queryResponse = restApi.query(projects);
         if (queryResponse.wasSuccessful()) {
         	// get the first result
-        	return queryResponse.getResults().get(0).getAsJsonObject();
+        	if (queryResponse.getResults().size()>0)
+        		return queryResponse.getResults().get(0).getAsJsonObject();
         }
         return null;
 	}
@@ -127,6 +130,35 @@ public class BuildExamples {
         		return queryResponse.getResults().get(0).getAsJsonObject();
         }
         return null;
+	}
+	
+	public JsonObject queryStoryById( String id ) throws IOException {
+		
+		QueryRequest storyQuery = new QueryRequest("hierarchicalrequirement");
+		storyQuery.setWorkspace(this.workspace.get("_ref").getAsString());
+		storyQuery.setFetch(new Fetch("Name","c_DeploymentKanban"));
+		storyQuery.setQueryFilter(
+				new QueryFilter("FormattedID", "=", id)
+		);
+		storyQuery.setPageSize(5);
+        storyQuery.setLimit(5);
+        
+        QueryResponse queryResponse = restApi.query(storyQuery);
+        if (queryResponse.wasSuccessful()) {
+        	// get the first result
+        	if ( queryResponse.getResults().size()>0)
+        		return queryResponse.getResults().get(0).getAsJsonObject();
+        }
+        return null;
+		
+	}
+	
+	public UpdateResponse updateKanbanState( JsonObject story, String newState) throws IOException {
+		JsonObject updatedStory = new JsonObject();
+		updatedStory.addProperty("c_DeploymentKanban", newState);
+		UpdateRequest updateRequest = new UpdateRequest(story.get("_ref").getAsString(), updatedStory);
+		UpdateResponse updateResponse = restApi.update(updateRequest);
+		return updateResponse;
 	}
 	
 	/**
@@ -198,7 +230,7 @@ public class BuildExamples {
 		prop.load(input);
 
 		String server = "https://rally1.rallydev.com";
-		String workspace = "Workspace 1";
+		String workspace = "DBS";
 
 		String username = prop.getProperty("user");
 		String password = prop.getProperty("password");
@@ -206,10 +238,10 @@ public class BuildExamples {
 		BuildExamples sample = new BuildExamples(server, username, password, workspace);
 		
 		// first query the project object (builddefinitions and builds are associated with a specific project)
-		JsonObject project = sample.queryProject("Team 1");
+		JsonObject project = sample.queryProject("Private Banking");
 		
 		// then try to query for the build definition
-		JsonObject buildDefinition = sample.queryBuildDefinition("Build 1", project);
+		JsonObject buildDefinition = sample.queryBuildDefinition("Private Banking", project);
 		
 		// if the build definition does not exist we will create it
 		if (buildDefinition==null) {
@@ -221,6 +253,21 @@ public class BuildExamples {
 			System.out.println( buildDefinition.get("Name"));
 			sample.createBuild(buildDefinition, 1, "A failing build", "99", "FAILURE", "");
 //			sample.createBuild(buildDefinition, 10, "A passing build", "100", "SUCCESS", "");
+		}
+		
+		// Query story example 
+		JsonObject story = sample.queryStoryById("US1");
+		
+		if (story != null) {
+			System.out.println("Story:"+story.get("Name")+" State:"+story.get("c_DeploymentKanban"));
+			
+			// update the state to the first state
+			UpdateResponse response = sample.updateKanbanState(story, "Defined");
+			System.out.println("Success:"+response.wasSuccessful());
+			// update the state to the second state
+			response = sample.updateKanbanState(story, "In Dev");
+			System.out.println("Success:"+response.wasSuccessful());
+			
 		}
 		
 	}
