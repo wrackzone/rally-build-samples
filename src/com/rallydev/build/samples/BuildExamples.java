@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Properties;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
@@ -153,6 +154,27 @@ public class BuildExamples {
 		
 	}
 	
+	public JsonArray queryStoriesByState( String state ) throws IOException {
+		
+		QueryRequest storyQuery = new QueryRequest("hierarchicalrequirement");
+		storyQuery.setWorkspace(this.workspace.get("_ref").getAsString());
+		storyQuery.setFetch(new Fetch("FormattedID","Name","c_DeploymentKanban"));
+		storyQuery.setQueryFilter(
+				new QueryFilter("c_DeploymentKanban", "=", state)
+		);
+		storyQuery.setPageSize(100);
+        storyQuery.setLimit(100);
+        
+        QueryResponse queryResponse = restApi.query(storyQuery);
+        if (queryResponse.wasSuccessful()) {
+        	// get the first result
+        	if ( queryResponse.getResults().size()>0)
+        		return queryResponse.getResults();
+        }
+        return null;
+		
+	}
+	
 	public UpdateResponse updateKanbanState( JsonObject story, String newState) throws IOException {
 		JsonObject updatedStory = new JsonObject();
 		updatedStory.addProperty("c_DeploymentKanban", newState);
@@ -241,7 +263,7 @@ public class BuildExamples {
 		JsonObject project = sample.queryProject("Private Banking");
 		
 		// then try to query for the build definition
-		JsonObject buildDefinition = sample.queryBuildDefinition("Private Banking", project);
+		JsonObject buildDefinition = sample.queryBuildDefinition("Build 1", project);
 		
 		// if the build definition does not exist we will create it
 		if (buildDefinition==null) {
@@ -267,6 +289,16 @@ public class BuildExamples {
 			// update the state to the second state
 			response = sample.updateKanbanState(story, "In Dev");
 			System.out.println("Success:"+response.wasSuccessful());
+			
+			// query stories by state
+			JsonArray stories = sample.queryStoriesByState("In Dev");
+			
+			if (stories != null) {
+				for ( int i = 0 ; i < stories.size();i++) {
+					JsonObject s = stories.get(i).getAsJsonObject();
+					System.out.println("Story:"+s.get("FormattedID")+" "+s.get("Name")+" State:"+s.get("c_DeploymentKanban"));
+				}
+			}
 			
 		}
 		
