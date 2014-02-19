@@ -133,6 +133,12 @@ public class BuildExamples {
         return null;
 	}
 	
+	/**
+	 * Returns a single story for the passed formatted id eg. US1
+	 * @param id
+	 * @return
+	 * @throws IOException
+	 */
 	public JsonObject queryStoryById( String id ) throws IOException {
 		
 		QueryRequest storyQuery = new QueryRequest("hierarchicalrequirement");
@@ -153,7 +159,13 @@ public class BuildExamples {
         return null;
 		
 	}
-	
+
+	/**
+	 * Returns a set of stories which have a particular kanban state eg. "In Dev"
+	 * @param state
+	 * @return
+	 * @throws IOException
+	 */
 	public JsonArray queryStoriesByState( String state ) throws IOException {
 		
 		QueryRequest storyQuery = new QueryRequest("hierarchicalrequirement");
@@ -175,6 +187,13 @@ public class BuildExamples {
 		
 	}
 	
+	/**
+	 * Updates a particular story with the passed kanban state.
+	 * @param story
+	 * @param newState
+	 * @return
+	 * @throws IOException
+	 */
 	public UpdateResponse updateKanbanState( JsonObject story, String newState) throws IOException {
 		JsonObject updatedStory = new JsonObject();
 		updatedStory.addProperty("c_DeploymentKanban", newState);
